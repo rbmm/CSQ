@@ -12,7 +12,7 @@ class __declspec(novtable) IO_CSQ_ALT
 
 protected:
 
-	NTSTATUS IoCsqInsertIrp(_In_ PIRP Irp, _In_ PLIST_ENTRY IrpList, _In_ PVOID InsertContext);
+	ULONG_PTR IoCsqInsertIrp(_In_ PIRP Irp, _In_ PLIST_ENTRY IrpList, _In_ PVOID InsertContext);
 
 	void CompleteAllPending(_In_ PLIST_ENTRY IrpList, _In_ NTSTATUS status, _In_opt_ ULONG_PTR Information = 0);
 

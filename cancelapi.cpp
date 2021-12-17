@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 _NT_BEGIN
+
 #include "cancelapi.h"
 
 #define _GET_CANCEL_CONTEXT(Irp) Irp->Tail.Overlay.DriverContext
@@ -76,7 +77,7 @@ void CSQ_IRP_CONTEXT_ALT::OnCancelOutsideSpinLock(PIRP Irp)
 	Release(Irp);
 }
 
-NTSTATUS IO_CSQ_ALT::IoCsqInsertIrp(_In_ PIRP Irp, _In_ PLIST_ENTRY IrpList, _In_ PVOID InsertContext)
+ULONG_PTR IO_CSQ_ALT::IoCsqInsertIrp(_In_ PIRP Irp, _In_ PLIST_ENTRY IrpList, _In_ PVOID InsertContext)
 {
 	CSQ_IRP_CONTEXT_ALT* ctx = 0;
 
@@ -98,7 +99,7 @@ NTSTATUS IO_CSQ_ALT::IoCsqInsertIrp(_In_ PIRP Irp, _In_ PLIST_ENTRY IrpList, _In
 
 	if (!Context)
 	{
-		return STATUS_SUCCESS;
+		return 0;
 	}
 
 	IoSetCancelRoutine(Irp, CSQ_IRP_CONTEXT_ALT::IoCancelRoutine);
@@ -117,7 +118,7 @@ NTSTATUS IO_CSQ_ALT::IoCsqInsertIrp(_In_ PIRP Irp, _In_ PLIST_ENTRY IrpList, _In
 
 	ctx->Release(Irp);
 
-	return STATUS_PENDING;
+	return Context;
 }
 
 void IO_CSQ_ALT::CompleteAllPending(_In_ PLIST_ENTRY IrpList, _In_ NTSTATUS status, _In_opt_ ULONG_PTR Information)

@@ -77,7 +77,7 @@ void CSQ_IRP_CONTEXT_ALT::OnCancelOutsideSpinLock(PIRP Irp)
 	Release(Irp);
 }
 
-ULONG_PTR IO_CSQ_ALT::IoCsqInsertIrp(_In_ PIRP Irp, _In_ PLIST_ENTRY IrpList, _In_ PVOID InsertContext)
+ULONG_PTR IO_CSQ_ALT::IoCsqInsertIrp(_In_ PIRP Irp, _In_ PLIST_ENTRY IrpList, _In_ PVOID InsertContext, _In_ BOOL bRelease)
 {
 	CSQ_IRP_CONTEXT_ALT* ctx = 0;
 
@@ -116,7 +116,7 @@ ULONG_PTR IO_CSQ_ALT::IoCsqInsertIrp(_In_ PIRP Irp, _In_ PLIST_ENTRY IrpList, _I
 		// The cancel routine WAS called at this point  
 	}
 
-	ctx->Release(Irp);
+	if (bRelease) ctx->Release(Irp);
 
 	return Context;
 }
@@ -201,7 +201,7 @@ PIRP IO_CSQ_ALT::IoCsqRemoveIrp(_In_ PLIST_ENTRY IrpList, _In_opt_ ULONG_PTR Con
 	return 0;
 }
 
-void IO_CSQ_ALT::ReleaseRemovedIrp(_In_ PIRP Irp, _In_opt_ CCHAR PriorityBoost)
+void IO_CSQ_ALT::ReleaseIrp(_In_ PIRP Irp, _In_opt_ CCHAR PriorityBoost)
 {
 	GET_CANCEL_CONTEXT(Irp)->Release(Irp, PriorityBoost);
 }

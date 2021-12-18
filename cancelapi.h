@@ -12,11 +12,11 @@ class __declspec(novtable) IO_CSQ_ALT
 
 protected:
 
-	ULONG_PTR IoCsqInsertIrp(_In_ PIRP Irp, _In_ PLIST_ENTRY IrpList, _In_ PVOID InsertContext);
+	ULONG_PTR IoCsqInsertIrp(_In_ PIRP Irp, _In_ PLIST_ENTRY IrpList, _In_ PVOID InsertContext, _In_ BOOL bRelease = TRUE);
 
 	void CompleteAllPending(_In_ PLIST_ENTRY IrpList, _In_ NTSTATUS status, _In_opt_ ULONG_PTR Information = 0);
 
 	PIRP IoCsqRemoveIrp(_In_ PLIST_ENTRY IrpList, _In_opt_ ULONG_PTR Context = 0);
 
-	static void ReleaseRemovedIrp(_In_ PIRP Irp, _In_opt_ CCHAR PriorityBoost = IO_NO_INCREMENT);
+	static void ReleaseIrp(_In_ PIRP Irp, _In_opt_ CCHAR PriorityBoost = IO_NO_INCREMENT);
 };

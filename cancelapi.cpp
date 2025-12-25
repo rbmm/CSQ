@@ -20,7 +20,7 @@ class CSQ_IRP_CONTEXT_ALT
 	{
 		if (!InterlockedDecrement(&_dwRefCount))
 		{
-			DbgPrint("IofCompleteRequest<%p>(%x)\n", Irp, Irp->IoStatus.Status);
+			DbgPrint("IofCompleteRequest<%p>(%x)\r\n", Irp, Irp->IoStatus.Status);
 			IofCompleteRequest(Irp, PriorityBoost);
 		}
 	}
@@ -47,7 +47,7 @@ C_ASSERT(sizeof(CSQ_IRP_CONTEXT_ALT) <= RTL_FIELD_SIZE(IRP, Tail.Overlay.DriverC
 
 void CSQ_IRP_CONTEXT_ALT::OnCancelOutsideSpinLock(PIRP Irp)
 {
-	DbgPrint("%s(%p)\n", __FUNCTION__, Irp);
+	DbgPrint("%hs(%p)\r\n", __FUNCTION__, Irp);
 
 	PLIST_ENTRY Entry = &Irp->Tail.Overlay.ListEntry;
 
@@ -67,7 +67,7 @@ void CSQ_IRP_CONTEXT_ALT::OnCancelOutsideSpinLock(PIRP Irp)
 
 		if (bRemoved) 
 		{
-			DbgPrint("IRP<%p> removed from list\n", Irp);
+			DbgPrint("IRP<%p> removed from list\r\n", Irp);
 			Irp->IoStatus.Status = STATUS_CANCELLED;
 			Irp->IoStatus.Information = 0;
 			Release(Irp);
@@ -92,7 +92,7 @@ ULONG_PTR IO_CSQ_ALT::IoCsqInsertIrp(_In_ PIRP Irp, _In_ PLIST_ENTRY IrpList, _I
 		IoMarkIrpPending(Irp);
 		InsertTailList(IrpList, &Irp->Tail.Overlay.ListEntry);
 
-		DbgPrint("CsqInsertIrp(%p)\n", Irp);
+		DbgPrint("CsqInsertIrp(%p)\r\n", Irp);
 	}
 
 	CsqReleaseLock(Irql);
@@ -158,7 +158,7 @@ void IO_CSQ_ALT::CompleteAllPending(_In_ PLIST_ENTRY IrpList, _In_ NTSTATUS stat
 
 		first = ctx->_next;
 
-		DbgPrint("IRP<%p> removed from list\n", Irp);
+		DbgPrint("IRP<%p> removed from list\r\n", Irp);
 
 		Irp->IoStatus.Status = status;
 		Irp->IoStatus.Information = Information;

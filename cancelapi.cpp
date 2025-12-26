@@ -67,7 +67,7 @@ void CSQ_IRP_CONTEXT_ALT::OnCancelOutsideSpinLock(PIRP Irp)
 
 		if (bRemoved) 
 		{
-			DbgPrint("IRP<%p> removed from list\r\n", Irp);
+			DbgPrint("IRP<%p> removed from list\n", Irp);
 			Irp->IoStatus.Status = STATUS_CANCELLED;
 			Irp->IoStatus.Information = 0;
 			Release(Irp);
@@ -166,6 +166,12 @@ void IO_CSQ_ALT::CompleteAllPending(_In_ PLIST_ENTRY IrpList, _In_ NTSTATUS stat
 	}
 }
 
+CSQ_IRP_CONTEXT_ALT* IO_CSQ_ALT::GetNextIrp(_In_ CSQ_IRP_CONTEXT_ALT* ctx, _Out_ PIRP* pIrp)
+{
+	*pIrp = CONTAINING_RECORD(ctx, IRP, Tail.Overlay.DriverContext);
+	return ctx->_next;
+}
+
 PIRP IO_CSQ_ALT::IoCsqRemoveIrp(_In_ PLIST_ENTRY IrpList, _In_opt_ ULONG_PTR Context)
 {
 	KIRQL Irql = CsqAcquireLock();
@@ -199,6 +205,40 @@ PIRP IO_CSQ_ALT::IoCsqRemoveIrp(_In_ PLIST_ENTRY IrpList, _In_opt_ ULONG_PTR Con
 	CsqReleaseLock(Irql);
 
 	return 0;
+}
+
+CSQ_IRP_CONTEXT_ALT* IO_CSQ_ALT::IoCsqRemoveIrps(_In_ PLIST_ENTRY IrpList, _In_ PVOID Context)
+{
+	CSQ_IRP_CONTEXT_ALT* first = 0, *ctx;
+
+	KIRQL Irql = CsqAcquireLock();
+
+	PLIST_ENTRY Entry = IrpList->Flink, IrpEntry;
+
+	while (Entry != IrpList)
+	{
+		PIRP Irp = CONTAINING_RECORD(Entry, IRP, Tail.Overlay.ListEntry);
+
+		IrpEntry = Entry, Entry = Entry->Flink;
+
+		ctx = GET_CANCEL_CONTEXT(Irp);
+
+		if (CsqIsNeedRemove(Irp, Context))
+		{
+			if (IoSetCancelRoutine(Irp, 0))
+			{
+				// cancel routine not called
+				InterlockedDecrement(&ctx->_dwRefCount);
+			}
+			RemoveEntryList(IrpEntry);
+			InitializeListHead(IrpEntry);
+			ctx->_next = first, first = ctx;
+		}
+	}
+
+	CsqReleaseLock(Irql);
+
+	return first;
 }
 
 void IO_CSQ_ALT::ReleaseIrp(_In_ PIRP Irp, _In_opt_ CCHAR PriorityBoost)
